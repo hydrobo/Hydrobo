@@ -18,12 +18,14 @@
 #define CH5 A4
 #define CH6 A5
 
-int enA = 9;   // PWM pin for left motor 
-int in1 = 7;    
-int in2 = 6; 
-int enB = 10;  // PWM pin for right motor 
-int in3 = 5; 
-int in4 = 4;
+int enA1 = 6;   // PWM pin for left motor
+int enA2 = 6;   // PWM pin for left motor 
+int in1 = 2;    
+int in2 = 4; 
+int enB1 = 10;  // PWM pin for right motor 
+int enB2 = 10;   // PWM pin for right motor 
+int in3 = 7; 
+int in4 = 8;
 
 // Integers to represent values from sticks and pots
 int ch1Value;
@@ -85,10 +87,12 @@ void setup(){
   pinMode(CH5, INPUT);
   pinMode(CH6, INPUT);
 
-  pinMode(enA, OUTPUT); 
+  pinMode(enA1, OUTPUT); 
+  pinMode(enA2, OUTPUT); 
   pinMode(in1, OUTPUT); 
   pinMode(in2, OUTPUT); 
-  pinMode(enB, OUTPUT); 
+  pinMode(enB1, OUTPUT);
+  pinMode(enB2, OUTPUT);  
   pinMode(in3, OUTPUT); 
   pinMode(in4, OUTPUT);
 
@@ -111,12 +115,12 @@ void loop() {
   const int minDriveSpeed = 0;   // minimum applied speed
 
   // If you don't want this behaviour, set speedLimiterPercent = 100.
-  int speedLimiterPercent = 100;
+  int speedLimiterPercent = ch5Value;
   if (speedLimiterPercent < 10) speedLimiterPercent = 10; // avoid zero unless you want
   int effectiveMaxSpeed = (baseMaxSpeed * speedLimiterPercent) / 100;
 
   // Determine throttle magnitude from ch2Value
-  int throttle = ch2Value; // -100..100
+  int throttle = ch3Value; // -100..100
   if (abs(throttle) <= deadband) {
     // no movement
     targetLeftSpeed = 0;
@@ -132,7 +136,7 @@ void loop() {
     int baseRight = speedFromStick;
 
     // Steering adjustment from ch1Value (-100..100)
-    int steer = ch4Value;
+    int steer = ch1Value;
     // steeringFactor is 0..100 representing how strongly we turn
     int steeringFactor = constrain(abs(steer), 0, 100);
 
@@ -157,7 +161,7 @@ void loop() {
       forward();
       targetLeftSpeed  = constrain(baseLeft, minDriveSpeed, effectiveMaxSpeed);
       targetRightSpeed = constrain(baseRight, minDriveSpeed, effectiveMaxSpeed);
-    } else {
+    } else if (throttle < 0){
       // backward: motors set for backward
       backward();
       targetLeftSpeed  = constrain(baseLeft, minDriveSpeed, effectiveMaxSpeed);
@@ -170,16 +174,19 @@ void loop() {
   rightSpeed = approachSpeed(rightSpeed, targetRightSpeed, accelerationStep);
 
   // Apply speeds to motors
-  analogWrite(enA, leftSpeed);
-  analogWrite(enB, rightSpeed);
+  analogWrite(enA1, leftSpeed);
+  //analogWrite(enA2, leftSpeed);
+  analogWrite(enB1, rightSpeed);
+  //analogWrite(enB2, rightSpeed);
 
   // Debug
   Serial.print("Left PWM: "); Serial.print(leftSpeed);
   Serial.print(" | Right PWM: "); Serial.println(rightSpeed);
 
   Serial.print("Ch1(steer): "); Serial.print(ch1Value);
-  Serial.print(" | Ch2(throttle): "); Serial.print(ch2Value);
-  Serial.print(" | Ch3(limit%): "); Serial.print(speedLimiterPercent);
+  Serial.print(" | Ch2(none): "); Serial.print(ch2Value);
+  Serial.print(" | Ch3(throttle): "); Serial.print(ch3Value);
+  Serial.print(" | Ch5(limit%): "); Serial.print(speedLimiterPercent);
   Serial.print(" | Ch6(switch): "); Serial.println(ch6Value);
 /*
   // Print to Serial Monitor
